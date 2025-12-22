@@ -9,7 +9,7 @@ from .grid import GridSpec
 from .bound_states import solve_bound_states, SolverSpec
 from .fields import apply_field, barrier_top, classify_barrier
 from .wkb import find_turning_points, action_integral, wkb_transmission
-from .observables import localization_metrics, forbidden_probability, survival_probability, boundary_flux
+from .observables import localization_metrics, forbidden_probability, compute_probability, probability_current
 from .tdse import run_tdse_frames, build_cap
 
 Array = np.ndarray
@@ -76,11 +76,13 @@ def run_field_scan(cfg: Dict[str, Any], res: Dict[str, Any], state_index: int = 
             mask = (x >= x1) & (x <= x2)
             S = action_integral(x[mask], Vtilt[mask], E)
             T = wkb_transmission(S)
-            records.append({"F": float(F), "status": status, "turning_points": (x1, x2), "S": S, "T": T})
+            xtop, vtop = barrier_top(x, Vtilt)
+            records.append({"F": float(F), "status": "not_over_the_barrier", "turning_points": (x1, x2), "S": S, "T": T, "barrier_top": (xtop, vtop)})
         else:
             xtop, vtop = barrier_top(x, Vtilt)
-            records.append({"F": float(F), "status": f"{status} or turning_point_out_of_range", "turning_points": (), "barrier_top": (xtop, vtop)})
+            records.append({"F": float(F), "status": f"over_the_barrier or turning_point_out_of_range", "turning_points": (), "barrier_top": (xtop, vtop)})
     return {"records": records, "F_grid": np.array(F_grid, dtype=float)}
+
 
 
 def run_tdse(cfg: Dict[str, Any], res: Dict[str, Any], state_index: int = 0) -> Dict[str, Any]:
@@ -93,6 +95,9 @@ def run_tdse(cfg: Dict[str, Any], res: Dict[str, Any], state_index: int = 0) -> 
     x = res["x"]
     dx = res["dx"]
     psi0 = res["psi"][:, state_index]
+    
+    scan = run_field_scan(cfg, res, state_index=state_index, F_grid=[cfg["tdse"]["F"]])
+    record = scan['records'][0]
 
     cap_cfg = tdse_cfg.get("cap")
     cap = None
@@ -114,13 +119,24 @@ def run_tdse(cfg: Dict[str, Any], res: Dict[str, Any], state_index: int = 0) -> 
         m=float(tdse_cfg.get("m", 1.0)),
     )
 
-    surv = np.array([survival_probability(f["psi"], dx) for f in frames], dtype=float)
-    flux = np.array([boundary_flux(f["psi"], dx, hbar=float(tdse_cfg.get("hbar", 1.0)), m=float(tdse_cfg.get("m", 1.0))) for f in frames])
-
+    # Define mask_in_well by calculating the indices of x within the well region, that is res["Vx"] < E[state_index]
+    mask_in_well = res["Vx"] < float(res["E"][state_index])
+    surv = np.array([compute_probability(f["psi"], dx, mask=mask_in_well) for f in frames], dtype=float)
+    #flux = np.array([boundary_flux(f["psi"], dx, hbar=float(tdse_cfg.get("hbar", 1.0)), m=float(tdse_cfg.get("m", 1.0))) for f in frames])
+    # calculate the flux at turning points x1 and x2
+    x1, x2 = record.get("turning_points", (None, None))
+    jxt = np.array([probability_current(f["psi"], dx, hbar=float(tdse_cfg.get("hbar", 1.0)), m=float(tdse_cfg.get("m", 1.0))) for f in frames])
+    j1t = np.array([jx[int(np.searchsorted(x, x1))] if x1 is not None else 0.0 for jx in jxt], dtype=float)
+    j2t = np.array([jx[int(np.searchsorted(x, x2))] if x2 is not None else 0.0 for jx in jxt], dtype=float)
+    total = np.array([compute_probability(f["psi"], dx) for f in frames], dtype=float)
     return {
         "frames": frames,
         "survival": surv,
-        "flux": flux,
+        "x1": x1,
+        "x2": x2,
+        "j1": j1t,
+        "j2": j2t,
+        "total": total,
         "cap": cap,
         "cap_markers": cap_markers,
     }

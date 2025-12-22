@@ -8,6 +8,7 @@ from scipy.sparse import diags
 from scipy.sparse.linalg import eigsh
 
 from .grid import GridSpec
+from .wkb import find_turning_points
 
 Array = np.ndarray
 
@@ -45,5 +46,9 @@ def solve_bound_states(
     for i in range(k):
         norm = np.sqrt(np.sum(np.abs(psi[:, i]) ** 2) * dx)
         psi[:, i] /= norm
+        # middle point positive, just to make wave series consistent 
+        if psi[N // 2, i] < 0:
+            psi[:, i] = -psi[:, i]
 
     return x, Vx, E, psi, dx
+

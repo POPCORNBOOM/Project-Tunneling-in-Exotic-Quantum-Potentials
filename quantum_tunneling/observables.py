@@ -21,18 +21,14 @@ def forbidden_probability(Vx: Array, En: float, psi: Array, dx: float) -> float:
     return float(np.sum(np.abs(psi[forb]) ** 2) * dx)
 
 
+# probability current or flux
 def probability_current(psi: Array, dx: float, hbar: float = 1.0, m: float = 1.0) -> Array:
     """Return local probability current j(x) = (hbar/m) Im(psi* dpsi/dx)."""
     dpsi_dx = np.gradient(psi, dx)
     return (hbar / m) * np.imag(np.conj(psi) * dpsi_dx)
 
 
-def boundary_flux(psi: Array, dx: float, hbar: float = 1.0, m: float = 1.0) -> tuple[float, float]:
-    j = probability_current(psi, dx, hbar=hbar, m=m)
-    return float(j[0]), float(j[-1])
-
-
-def survival_probability(psi: Array, dx: float, mask: Array | None = None) -> float:
+def compute_probability(psi: Array, dx: float, mask: Array | None = None) -> float:
     if mask is None:
         return float(np.sum(np.abs(psi) ** 2) * dx)
     return float(np.sum(np.abs(psi[mask]) ** 2) * dx)
