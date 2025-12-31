@@ -1,83 +1,78 @@
 """Turning points and WKB action integrals."""
 from __future__ import annotations
 
-from typing import Optional
+from .util import find_roots
+from .fields import barrier_top
+
+from typing import Optional, Dict, Any, Tuple
 import numpy as np
 
 Array = np.ndarray
-
-
-# Helper function to find turning points
-def find_turning_points(
+# 这个函数可以用来依据V(x)和E_n检查势垒情况。如果存在闭合势垒，则计算WKB透射率。
+def barrier_check(
     x: Array,
     Vx: Array,
-    E: float,
-    x_min: Optional[float] = None,
-    x_max: Optional[float] = None,
-    atol: float = 1e-12,
-    merge_tol: Optional[float] = None,
-) -> Array:
-    x = np.asarray(x, dtype=float)
-    Vx = np.asarray(Vx, dtype=float)
-    if x.ndim != 1 or Vx.ndim != 1 or x.size != Vx.size:
-        raise ValueError("x and Vx must be 1D arrays of the same length.")
+    E_n: float,
+    x_min: float = 0.0,
+    x_max: float = np.inf,
+) -> Dict[str, Any]:
+    """
+    参数
+    ---
+    x: ndarray
+        网格点。
+    Vx: ndarray
+        势能取值。
+    E_n: float
+        本征能。
+    x_min: float
+        搜索转折点的 x 起点（默认只取 x>=0）。
+    x_max: float
+        搜索转折点的 x 终点（默认无穷大）。
 
-    if x[0] > x[-1]:
-        x = x[::-1]
-        Vx = Vx[::-1]
+    返回
+    ---
+    Dict[str, Any]
+        - `barrier` (bool): 是否存在闭合势垒（至少两转折点且未过顶）。
+        - `status` (str): 势垒状态
+            - `over_the_barrier`: 能量超过势垒顶。
+            - `no_closed_barrier`: 未检测到闭合势垒。
+            - `can_tunnel`: 存在闭合势垒，可计算 WKB 透射率。
+        * 当 `barrier` 为 True 时，附加键：
+            - `turning_points` (Tuple[float, float]): 两转折点位置。
+            - `S` (float): WKB 作用量积分。
+            - `T_wkb` (float): WKB 透射率 `exp(-2S)`。
+            
+    """
+    tps = find_roots(x, Vx, E_n, x_min=x_min, x_max=x_max)
+    
+    vtop_idx = barrier_top(x, Vx, x_min=x_min, x_max=x_max)
+    xtop = float(x[vtop_idx])
+    vtop = float(Vx[vtop_idx])
+    
+    result = {
+            "status": f"over_the_barrier({E_n:.4f} > {vtop:.4f})",
+            "barrier": False,
+            "barrier_top": (xtop, vtop),
+        }
+    
+    if E_n > vtop: # 越过势垒顶
+        return result
+        
+    if len(tps) < 2: # 不存在闭合势垒，单调V或另一个转折点在考虑区域之外，需要增大L或减小x_min
+        result["status"] = "no_closed_barrier"
+        return result
 
-    mask = np.ones_like(x, dtype=bool)
-    if x_min is not None:
-        mask &= x >= x_min
-    if x_max is not None:
-        mask &= x <= x_max
-
-    idx = np.where(mask)[0]
-    if idx.size < 2:
-        return np.array([], dtype=float)
-
-    xw = x[idx]
-    fw = Vx[idx] - E
-
-    if merge_tol is None:
-        dx = np.median(np.diff(xw))
-        merge_tol = 1.5 * dx
-
-    roots = []
-
-    near = np.where(np.abs(fw) <= atol)[0]
-    if near.size > 0:
-        start = near[0]
-        prev = near[0]
-        for k in near[1:]:
-            if k == prev + 1:
-                prev = k
-            else:
-                roots.append(0.5 * (xw[start] + xw[prev]))
-                start = prev = k
-        roots.append(0.5 * (xw[start] + xw[prev]))
-
-    good = (np.abs(fw[:-1]) > atol) & (np.abs(fw[1:]) > atol)
-    sign_change = good & (fw[:-1] * fw[1:] < 0)
-
-    for i in np.where(sign_change)[0]:
-        x0, x1 = xw[i], xw[i + 1]
-        f0, f1 = fw[i], fw[i + 1]
-        xr = x0 - f0 * (x1 - x0) / (f1 - f0)
-        roots.append(xr)
-
-    if not roots:
-        return np.array([], dtype=float)
-
-    roots = np.array(sorted(roots), dtype=float)
-
-    merged = [roots[0]]
-    for r in roots[1:]:
-        if abs(r - merged[-1]) > merge_tol:
-            merged.append(r)
-        else:
-            merged[-1] = 0.5 * (merged[-1] + r)
-    return np.array(merged, dtype=float)
+    x1, x2 = float(tps[0]["x"]), float(tps[-1]["x"])
+    mask = (x >= x1) & (x <= x2)
+    S = float(action_integral(x[mask], Vx[mask], E_n))
+    T = float(wkb_transmission(S))
+    result["status"] = f"can_tunnel({E_n:.4f} < {vtop:.4f}, Tunneling Points: {x1:.4f} to {x2:.4f})"
+    result["barrier"] = True
+    result["turning_points"] = (x1, x2)
+    result["S"] = S
+    result["T_wkb"] = T
+    return result
 
 # Helper function to calculate action integral
 def action_integral(x: Array, Vx: Array, E: float, m: float = 1.0) -> float:

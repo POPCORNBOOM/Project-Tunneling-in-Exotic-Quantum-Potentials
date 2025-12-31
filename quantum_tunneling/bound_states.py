@@ -8,7 +8,7 @@ from scipy.sparse import diags
 from scipy.sparse.linalg import eigsh
 
 from .grid import GridSpec
-from .wkb import find_turning_points
+from .util import find_roots
 
 Array = np.ndarray
 

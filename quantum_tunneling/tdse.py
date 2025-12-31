@@ -55,8 +55,7 @@ def _split_step(psi: Array, Vx: Array, k_half: Array, dt: float, hbar: float, ca
 
 def run_tdse_frames(
     psi0: Array,
-    V_func: Callable[[Array], Array],
-    x: Array,
+    Vx: Array,
     dx: float,
     duration: float,
     dt: float,
@@ -94,7 +93,7 @@ def run_tdse_frames(
         Each frame has keys: "t" (float), "psi" (ndarray).
     """
     psi = psi0.copy()
-    Vx = V_func(x)
+
     N = psi.size
     n_steps = int(np.ceil(duration / dt))
     k_half = _k_half_phase(N, dx, dt, hbar, m)

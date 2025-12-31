@@ -11,21 +11,8 @@ def apply_field(Vx: Array, x: Array, F: float) -> Array:
     return Vx - F * x
 
 
-def barrier_top(x: Array, Vx: Array, xmin: None | float = None, xmax: None | float = None) -> Tuple[float, float]:
-    if xmin is not None:
-        mask = x >= xmin
-        x = x[mask]
-        Vx = Vx[mask]
-    if xmax is not None:
-        mask = x <= xmax
-        x = x[mask]
-        Vx = Vx[mask]
-    idx = np.argmax(Vx)
-    return float(x[idx]), float(Vx[idx])
-
-
-def classify_barrier(E: float, Vx: Array,) -> str:
-    vmax = float(np.max(Vx))
-    if E >= vmax:
-        return "over_the_barrier"
-    return "not_over_the_barrier"
+def barrier_top(x: Array, Vx: Array, x_min: float = float('-inf'), x_max: float = float('inf')) -> int:
+    mask = (x >= x_min) & (x <= x_max)
+    x = x[mask]
+    Vx = Vx[mask]
+    return np.argmax(Vx)
