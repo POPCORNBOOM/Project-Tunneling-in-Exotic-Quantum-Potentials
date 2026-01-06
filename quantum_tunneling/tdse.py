@@ -106,3 +106,13 @@ def run_tdse_frames(
             frames.append({"t": step * dt, "psi": psi.copy()})
 
     return frames
+
+
+def probability_flux(psi: Array, dx: float, hbar: float = 1.0, m: float = 1.0) -> Array:
+    """Current density j(x) pointing to +x direction for a wavefunction snapshot.
+
+    Uses j = (hbar / m) * Im(conj(psi) * dpsi/dx) with a central finite difference.
+    The output has the same shape as psi; edge points use first-order differences.
+    """
+    dpsi_dx = np.gradient(psi, dx, edge_order=2)
+    return (hbar / m) * np.imag(np.conj(psi) * dpsi_dx)

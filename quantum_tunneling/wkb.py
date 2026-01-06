@@ -51,9 +51,9 @@ def barrier_check(
     vtop = float(Vx[vtop_idx])
     
     result = {
-            "status": f"over_the_barrier({E_n:.4f} > {vtop:.4f})",
+            "status": f"over_the_barrier",
             "barrier": False,
-            "barrier_top": (xtop, vtop),
+            "barrier_top": (xtop, vtop, vtop_idx),
         }
     
     if E_n > vtop: # 越过势垒顶

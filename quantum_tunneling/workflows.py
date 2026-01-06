@@ -11,10 +11,10 @@ import numpy as np
 from .potentials import PotentialSpec
 from .grid import GridSpec
 from .bound_states import solve_bound_states, SolverSpec
-from .fields import apply_field, barrier_top
+from .fields import apply_field
 from .wkb import barrier_check
 from .observables import localization_metrics, forbidden_probability, compute_probability
-from .tdse import run_tdse_frames, build_cap
+from .tdse import run_tdse_frames, build_cap, probability_flux
 
 Array = np.ndarray
 
@@ -165,6 +165,7 @@ def run_tdse(
 
     F = float(tdse_cfg.get("F", 0.0))
     V_func = (lambda x: apply_field(base_V(x), x, F)) if F != 0.0 else base_V
+    Vx = V_func(res["x"])
 
     x = res["x"]
     dx = float(res["dx"])
@@ -176,11 +177,11 @@ def run_tdse(
     if cap_cfg:
         x_start = abs(cap_cfg.get("x_start", 0.0))
         cap_markers = {"left_cap": -x_start, "right_cap": x_start}
-
+    #print(type(V_func))
+    #print(float(tdse_cfg["duration"]))
     frames = run_tdse_frames(
         psi0,
-        V_func,
-        x,
+        Vx,
         dx,
         duration=float(tdse_cfg["duration"]),
         dt=float(tdse_cfg["dt"]),
@@ -190,16 +191,21 @@ def run_tdse(
         m=float(tdse_cfg.get("m", 1.0)),
     )
 
-    mask_in_well = res["Vx"] < float(res["E"][state_index])
+    barrier_info = barrier_check(x, Vx, float(res["E"][state_index]), x_min=0.0)
+    xtop = float(barrier_info["barrier_top"][0])
+    top_idx = barrier_info["barrier_top"][2]
+    mask_in_well = x <= xtop
+
     survival = np.array([compute_probability(f["psi"], dx, mask=mask_in_well) for f in frames], dtype=float)
-
-    barrier_info = barrier_check(x, apply_field(res["Vx"], x, F), float(res["E"][state_index]), x_min=0.0)
-
+    #tunneling_flux is an array of flux values at the barrier top over time
+    tunneling_flux = np.array([probability_flux(f["psi"], dx)[top_idx] for f in frames], dtype=float)
+    
     x1, x2 = barrier_info.get("turning_points", (None, None)) if barrier_info.get("barrier") else (None, None)
 
     return {
         "frames": frames,
         "survival": survival,
+        "tunneling_flux": tunneling_flux,
         "barrier_info": barrier_info,
         "x1": x1,
         "x2": x2,
