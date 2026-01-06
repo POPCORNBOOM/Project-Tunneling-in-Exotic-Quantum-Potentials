@@ -7,6 +7,7 @@ Date: 2026.01.06
 ## Choice of Potential
 
 I selected the Cusp Potential as the primary subject of investigation, as it exhibits a sharp cusp singularity at $x=0$ that substantially influences wavefunction behavior. The mathematical form is:
+
 $$
 V(x) = V_0 |x|^{\alpha}, \quad 0 < \alpha < 1
 $$
@@ -123,6 +124,7 @@ Specific data come from code cell 8 output, with each excited state correspondin
 **Ultrasoft barrier formation:**
 
 The barrier becomes ultrasoft when:
+
 $$
 V_{\text{top}}(F) \approx E_n, \quad \text{i.e.}, \quad F \lesssim F_{\text{ionization}}
 $$
@@ -134,6 +136,7 @@ When $F_{\text{ionization}} - F \ll F_{\text{ionization}}$, the barrier height $
 - However, this is not true "tunneling enhancement" but rather the barrier itself disappearing; the WKB formula becomes invalid
 
 For the Cusp potential, the ultrasoft regime occurs near:
+
 $$
 F \approx F_{\text{ionization}} = \alpha \left( \frac{(1-\alpha)^{(1-\alpha)} V_0}{ E_n^{(1-\alpha)}} \right)^{1/\alpha}
 $$
@@ -143,16 +146,19 @@ From my data, the ground-state ionization field is $F_{\text{ionization}} \appro
 **Singular barrier formation:**
 
 Singularity is not caused by the external field but is an intrinsic property of the potential itself. For the Cusp potential:
+
 $$
 V(x) = V_0|x|^{\alpha}, \quad 0 < \alpha < 1
 $$
 
 The derivative at $x=0$:
+
 $$
 \frac{dV}{dx} = \alpha V_0 \text{sgn}(x) |x|^{\alpha-1} \to \infty \quad \text{as} \, x \to 0
 $$
 
 This infinite derivative (or cusp) persists even with the external field:
+
 $$
 V(x) - Fx = V_0|x|^{\alpha} - Fx
 $$
