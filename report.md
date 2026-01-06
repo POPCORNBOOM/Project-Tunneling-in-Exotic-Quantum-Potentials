@@ -52,7 +52,6 @@ $$
 
 ![FIGURE/part_a_forbidden_region_probability_vs_n](figures/part_a_forbidden_region_probability_vs_n.png)
 
-
 ### 波函数伸出来多远
 
 定义一个"穿透深度"：从转折点开始，波函数的概率密度衰减到 1/e 时的距离。计算这个深度对不同 n 的变化。
@@ -267,5 +266,5 @@ $$
 我的做法是：对所有仍位于势垒顶以下的本征态（`i in range(highest_bound_state)`），分别运行 TDSE 得到 $\Gamma_i$；然后在同一外场 $F$ 下，计算对应的 $S(E_i)$。最后将 $(S(E_i),\ln\Gamma_i)$ 作图，并对 $\ln\Gamma$ 与 $S$ 做线性拟合，用来检验是否近似满足线性关系。
 
 ![FIGURE: part_d_lnGamma_vs_S](figures/part_d_lnGamma_vs_S.png)
-
+ 
 本次拟合的结果显示：$ln\Gamma_n=-0.0903*S(E_n)-7.9411$,r 为 -0.86, 有较强的负相关性, 斜率约为 -0.0903，与理论预期 $-2/\hbar = -2$ 有较大偏差。
