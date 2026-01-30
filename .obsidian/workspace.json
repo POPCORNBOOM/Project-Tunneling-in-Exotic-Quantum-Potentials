@@ -11,14 +11,10 @@
             "id": "77bf310d0bdf4099",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "report_En.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "report_En"
+              "title": "新标签页"
             }
           }
         ]
@@ -183,6 +179,15 @@
       "bases:创建新数据库": false
     }
   },
-  "active": "77bf310d0bdf4099",
-  "lastOpenFiles": []
+  "active": "cdbdd347c7b72285",
+  "lastOpenFiles": [
+    "Numerical Simulation of Spinodal Decomposition via the Cahn–Hilliard Equation.html",
+    "Pasted image 20260110174135.png",
+    "Pasted image 20260110174002.png",
+    "Pasted image 20260110173942.png",
+    "Pasted image 20260110173854.png",
+    "Pasted image 20260110173820.png",
+    "Pasted image 20260110173727.png",
+    "Numerical Simulation of Spinodal Decomposition via the Cahn–Hilliard Equation.md"
+  ]
 }

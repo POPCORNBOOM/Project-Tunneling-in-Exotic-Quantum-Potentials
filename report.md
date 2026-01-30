@@ -66,10 +66,6 @@ $$
 
 我同样认为这是因为随着能级升高，Vcusp平缓，波函数可以在禁阻区延伸受到的阻碍更小。
 
-## Part B — WKB Tunneling in Exotic Potentials
-
-> TBD
-
 ## Part C — 外场下的势垒变形与隧穿性质
 
 在这一部分，我加上一个均匀外电场 $F$，研究 exotic barriers 在倾斜下如何变形，以及何时会发生过势垒逃逸。
