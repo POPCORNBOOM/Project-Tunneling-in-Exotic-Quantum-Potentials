@@ -231,7 +231,7 @@ $$
 $$
 j(x,t)=\frac{\hbar}{m}\,\mathrm{Im}\left(\psi^*(x,t)\,\partial_x\psi(x,t)\right)
 $$
-
+ 
 我在实现里用 `np.gradient` 计算空间导数，得到 $j(x)$ 的离散数组（见 [`probability_flux`](quantum_tunneling/tdse.py) / [`probability_current`](quantum_tunneling/observables.py)）。随后取势垒顶所在的网格点 $x_{top}$，得到随时间变化的通量序列 $j(x_{top},t)$。
 
 为了与 survival 建立对应关系，我画了 $j(x_{top},t) / P_{\text{inwell}}(t)$。在指数衰减近似成立的稳定区间内，该比值应接近常数，可作为对 $\Gamma$ 的另一种交叉检验。
